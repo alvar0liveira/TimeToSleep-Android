@@ -10,27 +10,30 @@ import android.os.Build
 import android.os.IBinder
 import androidx.annotation.RequiresApi
 import kotlinx.coroutines.*
-import java.util.Timer
-import kotlin.concurrent.schedule
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.suspendCoroutine
 
 class SleepService: Service() {
 
-    private val timer: Timer = Timer()
+    private lateinit var job: Job
+    private var coroutineScope: CoroutineScope = CoroutineScope(EmptyCoroutineContext)
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         super.onStartCommand(intent, flags, startId)
 
-        val minutes = intent?.getStringExtra("minutes")?.toLong()!!
-        val milliseconds =  minutes * 60000
-
-        timer.schedule(milliseconds) {
-            stopAudio()
+        intent?.getStringExtra("minutes")?.toLong()?.let {
+            val milliseconds =  it * 60000
+            job = coroutineScope.launch {
+                delay(milliseconds)
+                stopAudio()
+            }
         }
         return START_STICKY
     }
     override fun onDestroy() {
-        timer.cancel()
+        job.cancel()
         super.onDestroy()
     }
     override fun onBind(p0: Intent?): IBinder? {
