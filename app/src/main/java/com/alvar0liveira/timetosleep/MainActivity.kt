@@ -1,7 +1,12 @@
 package com.alvar0liveira.timetosleep
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.os.PowerManager
 import android.provider.Settings
@@ -18,10 +23,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.alvar0liveira.timetosleep.ui.theme.TimeToSleepTheme
 
+private const val CHANNEL_ID = "Time_To_Sleep_Channel"
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         askForStoppingBatteryOptimization()
+        createNotificationChannel()
         setContent {
             var minutes by remember {
                 mutableStateOf("60")
@@ -89,6 +96,18 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun createNotificationChannel(){
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "TimeToSleep"
+            val description = "A notification channel for TimeToSleep"
+            val importance = NotificationManager.IMPORTANCE_LOW
+            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+                this.description = description
+            }
+            val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
 }
 
 @Composable
