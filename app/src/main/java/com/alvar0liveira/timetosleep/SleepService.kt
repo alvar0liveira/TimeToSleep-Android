@@ -33,7 +33,7 @@ class SleepService: Service() {
             job = coroutineScope.launch {
                 delay(milliseconds)
                 stopAudio()
-                cancelNotification(context = applicationContext)
+                onDestroy()
             }
         }
         return START_STICKY
