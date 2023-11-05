@@ -1,15 +1,12 @@
 package com.alvar0liveira.timetosleep
 
-import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.os.PowerManager
-import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -21,20 +18,22 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.core.app.NotificationCompat
+import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.alvar0liveira.timetosleep.ui.theme.TimeToSleepTheme
+import java.util.concurrent.TimeUnit
 
-private const val CHANNEL_ID = "Time_To_Sleep_Channel"
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        askForStoppingBatteryOptimization()
         createNotificationChannel()
         setContent {
             var minutes by remember {
                 mutableStateOf("60")
             }
             TimeToSleepTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
                     color = MaterialTheme.colors.background
                 ) {
@@ -71,12 +70,14 @@ class MainActivity : ComponentActivity() {
                             )
 
                             ActionButton("Start") {
-                                startService(Intent(this@MainActivity, SleepService::class.java).putExtra("minutes", minutes))
+                                enqueueLongWorker(minutes.toLongOrNull())
+                                sendNotification(this@MainActivity)
                                 Toast.makeText(this@MainActivity, "Good Night!", Toast.LENGTH_LONG).show()
                             }
 
                             ActionButton("Stop") {
-                                stopService(Intent(this@MainActivity, SleepService::class.java))
+                                this@MainActivity.cancelNotification()
+                                cancelWorker()
                                 Toast.makeText(this@MainActivity, "Stopped the service", Toast.LENGTH_LONG).show()
                             }
                         }
@@ -86,27 +87,58 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-    private fun askForStoppingBatteryOptimization(){
-        val intent = Intent()
-        val pm = getSystemService(POWER_SERVICE) as PowerManager
-        if (!pm.isIgnoringBatteryOptimizations(packageName)){
-            intent.action = Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
-            intent.data = Uri.parse("package:$packageName")
-            startActivity(intent)
+
+    private fun enqueueLongWorker(delay: Long?){
+        delay?.let {
+            val workManager: WorkManager = WorkManager
+                .getInstance(this)
+            val workRequest: OneTimeWorkRequest = OneTimeWorkRequestBuilder<SleepWorker>()
+                .setInitialDelay(it, TimeUnit.MINUTES)
+                .addTag(SLEEP_WORKER_TAG)
+                .build()
+            workManager
+                .enqueue(workRequest)
         }
+    }
+
+    private fun cancelWorker(){
+        WorkManager
+            .getInstance(this)
+            .cancelAllWorkByTag(SLEEP_WORKER_TAG)
+        this@MainActivity.cancelNotification()
     }
 
     private fun createNotificationChannel(){
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val name = "TimeToSleep"
-            val description = "A notification channel for TimeToSleep"
+            val name = NOTIFICATION_CHANNEL_NAME
+            val description = NOTIFICATION_CHANNEL_DESCRIPTION
             val importance = NotificationManager.IMPORTANCE_LOW
-            val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
+            val channel = NotificationChannel(NOTIFICATION_CHANNEL_ID, name, importance).apply {
                 this.description = description
             }
             val notificationManager = applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }
+    }
+
+    private fun sendNotification(context: Context){
+        val intent = Intent(context, MainActivity::class.java)
+        val pendingIntent = PendingIntent.getActivity(
+            context,
+            0,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE
+        )
+        val notification = NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_time_to_sleep)
+            .setContentTitle(NOTIFICATION_TITLE)
+            .setContentText(NOTIFICATION_TEXT)
+            .setContentIntent(pendingIntent)
+            .setOngoing(true)
+            .build()
+
+        val notificationManager = context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.notify(NOTIFICATION_ID, notification)
     }
 }
 
