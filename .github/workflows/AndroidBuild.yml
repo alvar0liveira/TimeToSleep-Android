@@ -21,6 +21,8 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./gradlew
 
+      - name: Set the environment variable
+        run: echo "BUILD_NAME=TimeToSleep-${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
       - name: Build with gradle
         run : ./gradlew build
@@ -28,8 +30,8 @@ jobs:
       - name: Upload a BuildArtifact
         uses: actions/upload-artifact@v3.1.3
         with:
-          name: TimeToSleep-${{ github.event.release.tag_name }}.apk
-          path: app/build/outputs/apk/release/TimeToSleep-${{ github.event.release.tag_name }}.apk.apk
+          name: $BUILD_NAME.apk
+          path: $BUILD_NAME.apk
 
 
       - name: Create Github Release
@@ -38,5 +40,5 @@ jobs:
           generate_release_notes: true
           prerelease: true
           files: |
-            app/build/outputs/apk/release/TimeToSleep-${{ github.event.release.tag_name }}.apk
-            app/build/outputs/bundle/release/TimeToSleep-${{ github.event.release.tag_name }}.aab
+            app/build/outputs/apk/release/$BUILD_NAME.apk
+            app/build/outputs/bundle/release/$BUILD_NAME.aab
