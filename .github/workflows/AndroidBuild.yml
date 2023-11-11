@@ -4,6 +4,8 @@ on:
     tags:
       - '*'
 
+permissions:
+  contents: write
 
 jobs:
   build:
@@ -44,8 +46,6 @@ jobs:
 
       - name: Create Github Release
         uses: softprops/action-gh-release@v1
-        permissions:
-          contents: write
         with:
           generate_release_notes: true
           prerelease: true
