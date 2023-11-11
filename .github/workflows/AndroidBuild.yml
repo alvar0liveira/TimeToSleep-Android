@@ -27,11 +27,15 @@ jobs:
       - name: Build with gradle
         run : ./gradlew build
 
+      - name: Rename APK
+        run:
+          mv "./app/build/outputs/apk/release/app-release.apk" "./app/build/outputs/apk/release/${{ env.BUILD_NAME }}.apk"
+
       - name: Upload a BuildArtifact
         uses: actions/upload-artifact@v3.1.3
         with:
           name: ${{ env.BUILD_NAME}}.apk
-          path: ${{ env.BUILD_NAME}}.apk
+          path: app/build/outputs/apk/release/
 
 
       - name: Create Github Release
