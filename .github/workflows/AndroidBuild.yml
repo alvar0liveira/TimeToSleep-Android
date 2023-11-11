@@ -38,5 +38,5 @@ jobs:
           generate_release_notes: true
           prerelease: true
           files: |
-            app/build/outputs/apk/release/TimeToSleep-${{ github.event.release.tag_name }}.apk.apk
-            app/build/outputs/bundle/release/TimeToSleep-${{ github.event.release.tag_name }}.apk.aab
+            app/build/outputs/apk/release/TimeToSleep-${{ github.event.release.tag_name }}.apk
+            app/build/outputs/bundle/release/TimeToSleep-${{ github.event.release.tag_name }}.aab
