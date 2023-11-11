@@ -33,7 +33,7 @@ jobs:
 
       - name: Rename APK
         run:
-          mv "./app/build/outputs/apk/release/app-release.apk" "./app/build/outputs/apk/release/${{ env.BUILD_NAME }}.apk"
+          mv "./app/build/outputs/apk/release/app-release-unsigned.apk.apk" "./app/build/outputs/apk/release/${{ env.BUILD_NAME }}.apk"
 
       - name: Upload a BuildArtifact
         uses: actions/upload-artifact@v3.1.3
