@@ -24,22 +24,22 @@ jobs:
       - name: Set the environment variable
         run: echo "BUILD_NAME=TimeToSleep-${GITHUB_REF#refs/*/}" >> $GITHUB_ENV
 
-#      - name: Build with gradle
-#        run : ./gradlew build
+      - name: Build with gradle
+        run : ./gradlew build
 
-      - name: Build release APK
-        run: bash ./gradlew assembleRelease --stacktrace
+#      - name: Build release APK
+#        run: bash ./gradlew assembleRelease --stacktrace
 
 
-      - name: Rename APK
-        run:
-          mv "./app/build/outputs/apk/release/app-release-unsigned.apk.apk" "./app/build/outputs/apk/release/${{ env.BUILD_NAME }}.apk"
+#      - name: Rename APK
+#        run:
+#          mv "./app/build/outputs/apk/release/app-release-unsigned.apk.apk" "./app/build/outputs/apk/release/${{ env.BUILD_NAME }}.apk"
 
       - name: Upload a BuildArtifact
         uses: actions/upload-artifact@v3.1.3
         with:
-          name: ${{ env.BUILD_NAME}}.apk
-          path: app/build/outputs/apk/release/
+          name: app-debug.apk
+          path: app/build/outputs/apk/debug/
 
 
       - name: Create Github Release
@@ -48,5 +48,4 @@ jobs:
           generate_release_notes: true
           prerelease: true
           files: |
-            app/build/outputs/apk/release/${{ env.BUILD_NAME}}.apk
-            app/build/outputs/bundle/release/${{ env.BUILD_NAME}}.aab
+            app/build/outputs/apk/debug/app-debug.apk
